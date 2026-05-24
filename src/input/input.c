@@ -763,6 +763,36 @@ static void MainLoop( input_thread_t *p_input, bool b_interactive )
                 MainLoopStatistics( p_input );
                 i_intf_update = now + INT64_C(250000);
             }
+
+            /* --- chapter OSD begin --- */
+            static int last_chapter = -1;
+
+            /* 現在チャプター取得 */
+            int chapter = var_GetInteger(p_input, "chapter");
+
+            /* チャプター数取得 */
+            int chapter_count = var_GetInteger(p_input, "chapter-count");
+
+            if (chapter >= 0 && chapter < chapter_count && chapter != last_chapter)
+            {
+                last_chapter = chapter;
+
+                /* チャプター名取得 */
+                vlc_value_t val;
+                if (var_Get(p_input, "chapter-name", &val) == VLC_SUCCESS)
+                {
+                    const char *name = val.psz_string;
+
+                    if (name && *name)
+                    {
+                        msg_Info(p_input, "Chapter: %s", name);
+                    }
+
+                    free(val.psz_string);
+                }
+            }
+            /* --- chapter OSD end --- */
+
         }
 
         /* Handle control */
