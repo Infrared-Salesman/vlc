@@ -34,6 +34,9 @@
 #include <limits.h>
 #include <assert.h>
 #include <sys/stat.h>
+/*
+#include <windows.h>
+*/
 
 #include "input_internal.h"
 #include "event.h"
@@ -55,6 +58,9 @@
 #include <vlc_stream.h>
 #include <vlc_stream_extractor.h>
 #include <vlc_renderer_discovery.h>
+/*
+#include "../video_output/vout_internal.h"
+*/
 
 /*****************************************************************************
  * Local prototypes
@@ -691,6 +697,16 @@ static void MainLoopStatistics( input_thread_t *p_input )
  */
 static void MainLoop( input_thread_t *p_input, bool b_interactive )
 {
+    /*
+    MessageBoxA(
+        NULL,
+        "CUSTOM VLC LOADED",
+        "DEBUG",
+        MB_OK
+    );
+    msg_Err(p_input, "######## CUSTOM VLC BUILD ########");
+    */
+
     vlc_tick_t i_intf_update = 0;
     vlc_tick_t i_last_seek_mdate = 0;
 
@@ -773,22 +789,31 @@ static void MainLoop( input_thread_t *p_input, bool b_interactive )
             /* チャプター数取得 */
             int chapter_count = var_GetInteger(p_input, "chapter-count");
 
-            if (chapter >= 0 && chapter < chapter_count && chapter != last_chapter)
+            /*
+            int title = var_GetInteger(p_input, "title");
+
+            msg_Info(p_input,
+                     "DEBUG title=%d chapter=%d",
+                     title,
+                     chapter);
+            */
+
+            if (chapter != last_chapter)
             {
                 last_chapter = chapter;
 
-                /* チャプター名取得 */
-                vlc_value_t val;
-                if (var_Get(p_input, "chapter-name", &val) == VLC_SUCCESS)
+                msg_Info(p_input, "### CHAPTER %d ###", chapter);
+
+                vout_thread_t *p_vout = input_GetVout(p_input);
+
+                if (p_vout)
                 {
-                    const char *name = val.psz_string;
+                    vout_OSDMessage(p_vout,
+                                    VOUT_SPU_CHANNEL_OSD,
+                                    "Chapter %d",
+                                    chapter + 1);
 
-                    if (name && *name)
-                    {
-                        msg_Info(p_input, "Chapter: %s", name);
-                    }
-
-                    free(val.psz_string);
+                    vlc_object_release(p_vout);
                 }
             }
             /* --- chapter OSD end --- */
